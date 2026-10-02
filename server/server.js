@@ -21,6 +21,9 @@ connectDB();
 
 const app = express();
 
+// Render sits behind a proxy; trust its forwarded client IP for rate limiting.
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false, limit: '10kb' }));
