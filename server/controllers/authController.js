@@ -3,6 +3,13 @@ const jwt = require('jsonwebtoken');
 const asyncHandler = require('../middleware/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 
+const getAuthCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  path: '/',
+});
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -75,15 +82,9 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 
   const options = {
+    ...getAuthCookieOptions(),
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    httpOnly: true,
-    sameSite: 'lax'
   };
-
-  if (process.env.NODE_ENV === 'production') {
-    options.secure = true;
-    options.sameSite = 'strict';
-  }
 
   res
     .status(statusCode)
@@ -105,10 +106,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @route   POST /api/auth/logout
 // @access  Public
 exports.logout = asyncHandler(async (req, res, next) => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
-  });
+  res.clearCookie('token', getAuthCookieOptions());
 
   res.status(200).json({
     success: true,
@@ -232,4 +230,3 @@ exports.updateMe = asyncHandler(async (req, res, next) => {
     }
   });
 });
-
